@@ -11,8 +11,8 @@ cloudinary.config({
     api_secret: process.env.CLOUD_API_SECRET
 });
 
-//Upload image
-router.post('/upload', (req, res) => {
+//Upload image only admin can
+router.post('/upload', auth, authAdmin, (req, res) => {
     try {
         console.log(req.files);
         if(!req.files || Object.keys(req.files).length === 0) {
@@ -43,6 +43,21 @@ router.post('/upload', (req, res) => {
     }
 });
 
+//Delete image only admin can
+router.post('/destroy', auth, authAdmin, (req, res) => {
+    try {
+        const {public_id} = req.body;
+        if(!public_id) return res.status(400).json({msg: "No images selected."});
+
+        cloudinary.v2.uploader.destroy(public_id, async (err, result) => {
+            if(err) throw err;
+
+            res.json({msg: "Deleted Images"})
+        })
+    } catch (err) {
+        return res.status(500).json({msg: err.message})
+    }
+});
 
 const removeTmp = (path) => {
     fs.unlink(path, err => {
